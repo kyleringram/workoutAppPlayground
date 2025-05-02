@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Workout Tracker</h1>
+        </header>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <main>
+            <section class="exercise-section">
+                <div class="section-header">
+                    <h2>Select Exercise</h2>
+                    <button id="show-add-exercise-form" class="btn btn-secondary">Add New Exercise</button>
+                </div>
+
+                <div id="add-exercise-form-container" style="display: none;">
+                    <h3>Create New Exercise</h3>
+                    <form id="add-exercise-form" action="{{ url_for('add_exercise') }}" method="post">
+                        <div class="form-group">
+                            <label for="exercise-name">Exercise Name:</label>
+                            <input type="text" id="exercise-name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="muscle-group">Muscle Group:</label>
+                            <input type="text" id="muscle-group" name="muscle_group" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <textarea id="description" name="description" rows="3" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="image-path">Image Path:</label>
+                            <select id="image-path" name="image_path" required>
+                                <option value="/static/images/bench_press.svg">Bench Press</option>
+                                <option value="/static/images/squat.svg">Squat</option>
+                                <option value="/static/images/deadlift.svg">Deadlift</option>
+                                <option value="/static/images/pullup.svg">Pull-up</option>
+                                <option value="/static/images/bicep_curl.svg">Bicep Curl</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Save Exercise</button>
+                            <button type="button" id="cancel-add-exercise" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="exercise-list" id="exercise-list">
+                    {% for exercise in exercises %}
+                        <div class="exercise-item {% if selected_exercise and selected_exercise.id == exercise.id %}selected{% endif %}">
+                            <a href="{{ url_for('select_exercise', exercise_id=exercise.id) }}">
+                                <div class="exercise-image">
+                                    <img src="{{ exercise.image_path }}" alt="{{ exercise.name }}">
+                                </div>
+                                <div class="exercise-info">
+                                    <h3 class="exercise-name">{{ exercise.name }}</h3>
+                                    <p class="exercise-muscle-group">Muscle Group: {{ exercise.muscle_group }}</p>
+                                    <p class="exercise-description">{{ exercise.description }}</p>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <section class="workout-form-section">
+                <h2>Record Workout</h2>
+                <form id="workout-form" action="{{ url_for('add_workout') }}" method="post">
+                    <div class="form-group">
+                        <label>Selected Exercise:</label>
+                        <span id="selected-exercise-name">
+                            {% if selected_exercise %}
+                                {{ selected_exercise.name }}
+                                {% if selected_exercise %}
+                                    <a href="{{ url_for('clear_selection') }}">(Clear)</a>
+                                {% endif %}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">Weight (lbs):</label>
+                        <input type="number" id="weight" name="weight" step="0.5" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reps">Reps:</label>
+                        <input type="number" id="reps" name="reps" min="1" required>
+                    </div>
+
+                    <button type="submit" class="btn">Save Workout</button>
+                </form>
+            </section>
+
+            <section class="workout-history-section">
+                <h2>Workout History</h2>
+                <div class="workout-history">
+                    {% if workouts %}
+                        {% for workout in workouts %}
+                            <div class="workout-item">
+                                <div class="workout-date">{{ workout.date.strftime('%Y-%m-%d') }}</div>
+                                <div class="workout-exercise">{{ workout.exercise.name }}</div>
+                                <div class="workout-details">
+                                    <span class="workout-weight">{{ workout.weight }}</span> lbs x 
+                                    <span class="workout-reps">{{ workout.reps }}</span> reps
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No workout history available.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Workout Tracker App</p>
+        </footer>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

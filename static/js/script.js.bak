@@ -1,0 +1,163 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // DOM Elements
+    const exerciseList = document.getElementById('exercise-list');
+    const workoutForm = document.getElementById('workout-form');
+    const selectedExerciseName = document.getElementById('selected-exercise-name');
+    const selectedExerciseId = document.getElementById('selected-exercise-id');
+    const weightInput = document.getElementById('weight');
+    const repsInput = document.getElementById('reps');
+    const workoutHistory = document.getElementById('workout-history');
+    
+    // Templates
+    const exerciseTemplate = document.getElementById('exercise-template');
+    const workoutHistoryTemplate = document.getElementById('workout-history-template');
+    
+    // Variables
+    let selectedExercise = null;
+    
+    // Fetch exercises from the server
+    async function fetchExercises() {
+        try {
+            const response = await fetch('/api/exercises');
+            const exercises = await response.json();
+            displayExercises(exercises);
+        } catch (error) {
+            console.error('Error fetching exercises:', error);
+        }
+    }
+    
+    // Display exercises in the exercise list
+    function displayExercises(exercises) {
+        exerciseList.innerHTML = '';
+        
+        exercises.forEach(exercise => {
+            const exerciseElement = document.importNode(exerciseTemplate.content, true);
+            
+            const exerciseItem = exerciseElement.querySelector('.exercise-item');
+            const img = exerciseElement.querySelector('img');
+            const name = exerciseElement.querySelector('.exercise-name');
+            const muscleGroup = exerciseElement.querySelector('.exercise-muscle-group');
+            const description = exerciseElement.querySelector('.exercise-description');
+            
+            img.src = exercise.image_path;
+            img.alt = exercise.name;
+            name.textContent = exercise.name;
+            muscleGroup.textContent = `Muscle Group: ${exercise.muscle_group}`;
+            description.textContent = exercise.description;
+            
+            exerciseItem.addEventListener('click', () => {
+                selectExercise(exercise, exerciseItem);
+            });
+            
+            exerciseList.appendChild(exerciseElement);
+        });
+    }
+    
+    // Select an exercise
+    function selectExercise(exercise, exerciseItem) {
+        // Remove selected class from previously selected exercise
+        const previouslySelected = exerciseList.querySelector('.selected');
+        if (previouslySelected) {
+            previouslySelected.classList.remove('selected');
+        }
+        
+        // Add selected class to the clicked exercise
+        exerciseItem.classList.add('selected');
+        
+        // Update selected exercise
+        selectedExercise = exercise;
+        selectedExerciseName.textContent = exercise.name;
+        selectedExerciseId.value = exercise.id;
+    }
+    
+    // Submit workout form
+    workoutForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        
+        if (!selectedExercise) {
+            alert('Please select an exercise first.');
+            return;
+        }
+        
+        const workoutData = {
+            exercise_id: selectedExerciseId.value,
+            weight: parseFloat(weightInput.value),
+            reps: parseInt(repsInput.value)
+        };
+        
+        try {
+            const response = await fetch('/api/workouts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(workoutData)
+            });
+            
+            if (response.ok) {
+                // Reset form
+                workoutForm.reset();
+                selectedExerciseName.textContent = 'None';
+                selectedExerciseId.value = '';
+                selectedExercise = null;
+                
+                // Remove selected class from selected exercise
+                const selected = exerciseList.querySelector('.selected');
+                if (selected) {
+                    selected.classList.remove('selected');
+                }
+                
+                // Refresh workout history
+                fetchWorkoutHistory();
+                
+                alert('Workout saved successfully!');
+            } else {
+                alert('Failed to save workout. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error saving workout:', error);
+            alert('An error occurred while saving the workout.');
+        }
+    });
+    
+    // Fetch workout history from the server
+    async function fetchWorkoutHistory() {
+        try {
+            const response = await fetch('/api/workouts');
+            const workouts = await response.json();
+            displayWorkoutHistory(workouts);
+        } catch (error) {
+            console.error('Error fetching workout history:', error);
+        }
+    }
+    
+    // Display workout history
+    function displayWorkoutHistory(workouts) {
+        workoutHistory.innerHTML = '';
+        
+        if (workouts.length === 0) {
+            workoutHistory.innerHTML = '<p>No workout history available.</p>';
+            return;
+        }
+        
+        workouts.forEach(workout => {
+            const workoutElement = document.importNode(workoutHistoryTemplate.content, true);
+            
+            const date = workoutElement.querySelector('.workout-date');
+            const exercise = workoutElement.querySelector('.workout-exercise');
+            const weight = workoutElement.querySelector('.workout-weight');
+            const reps = workoutElement.querySelector('.workout-reps');
+            
+            date.textContent = new Date(workout.date).toLocaleDateString();
+            exercise.textContent = workout.exercise_name;
+            weight.textContent = workout.weight;
+            reps.textContent = workout.reps;
+            
+            workoutHistory.appendChild(workoutElement);
+        });
+    }
+    
+    // Initialize
+    fetchExercises();
+    fetchWorkoutHistory();
+});
