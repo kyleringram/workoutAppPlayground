@@ -98,6 +98,34 @@ def clear_selection():
     session.pop('selected_exercise_id', None)
     return redirect(url_for('index'))
 
+# Delete exercise
+@app.route('/delete_exercise/<int:exercise_id>', methods=['POST'])
+def delete_exercise(exercise_id):
+    try:
+        exercise = Exercise.query.get_or_404(exercise_id)
+
+        # Check if there are any workout logs associated with this exercise
+        workout_logs = WorkoutLog.query.filter_by(exercise_id=exercise_id).all()
+        if workout_logs:
+            # Delete associated workout logs first
+            for log in workout_logs:
+                db.session.delete(log)
+
+        # Delete the exercise
+        db.session.delete(exercise)
+        db.session.commit()
+
+        # Clear selected exercise if it was the one deleted
+        if 'selected_exercise_id' in session and session['selected_exercise_id'] == exercise_id:
+            session.pop('selected_exercise_id', None)
+
+        flash(f'Exercise "{exercise.name}" deleted successfully!')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting exercise: {str(e)}')
+
+    return redirect(url_for('index'))
+
 # Add new exercise
 @app.route('/add_exercise', methods=['POST'])
 def add_exercise():
@@ -106,10 +134,9 @@ def add_exercise():
         name = request.form['name']
         muscle_group = request.form['muscle_group']
         description = request.form['description']
-        image_path = request.form['image_path']
 
         # Validate data
-        if not name or not muscle_group or not description or not image_path:
+        if not name or not muscle_group or not description:
             flash('All fields are required.')
             return redirect(url_for('index'))
 
@@ -118,6 +145,37 @@ def add_exercise():
         if existing_exercise:
             flash(f'An exercise named "{name}" already exists.')
             return redirect(url_for('index'))
+
+        # Create SVG image for the exercise
+        import os
+        import random
+
+        # Convert exercise name to filename format
+        exercise_name = name.lower().replace(' ', '_')
+
+        # Generate a random color for the SVG
+        colors = ['red', 'blue', 'green', 'purple', 'orange', 'teal', 'brown', 'pink']
+        color = random.choice(colors)
+
+        # Create SVG content
+        svg_content = f'''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="300" height="200" fill="{color}" stroke="black" stroke-width="2"/>
+    <text x="150" y="80" font-family="Arial" font-size="24" fill="white" text-anchor="middle">{name}</text>
+    <text x="150" y="120" font-family="Arial" font-size="18" fill="white" text-anchor="middle">Muscle Group: {muscle_group}</text>
+</svg>
+'''
+
+        # Ensure the directory exists
+        os.makedirs('static/images', exist_ok=True)
+
+        # Save the SVG file
+        svg_path = f'static/images/{exercise_name}.svg'
+        with open(svg_path, 'w') as f:
+            f.write(svg_content)
+
+        # Set the image path for the exercise
+        image_path = f'/static/images/{exercise_name}.svg'
 
         # Create new exercise
         exercise = Exercise(
