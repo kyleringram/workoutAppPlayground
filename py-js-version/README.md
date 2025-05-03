@@ -103,12 +103,36 @@ This hybrid approach is ideal when:
 - More secure data handling
 - Ability to implement complex server-side logic
 
+## Authentication and Authorization
+
+This implementation includes a complete user authentication and authorization system:
+
+1. **User Registration**: New users can create accounts with username, email, and password
+2. **User Login**: Existing users can log in with their credentials
+3. **Session Management**: Flask sessions keep track of logged-in users
+4. **Authorization**: Only authenticated users can add exercises, record workouts, and view their workout history
+5. **User-specific Data**: Each user can only see and manage their own workout data
+
+### How Authentication Works
+
+1. **Backend (Python)**:
+   - Stores user credentials securely in the database
+   - Manages user sessions
+   - Restricts API access based on authentication status
+   - Associates workouts with specific users
+
+2. **Frontend (JavaScript)**:
+   - Provides login and registration forms
+   - Sends authentication requests to the backend
+   - Updates the UI based on authentication status
+   - Filters displayed data to show only the user's own workouts
+
 ## Future Enhancements
 
 This example could be extended with:
 
-1. User authentication and authorization
-2. More advanced data visualization
-3. Offline capabilities with service workers
-4. Real-time updates with WebSockets
-5. More sophisticated error handling
+1. More advanced data visualization
+2. Offline capabilities with service workers
+3. Real-time updates with WebSockets
+4. More sophisticated error handling
+5. Password reset functionality

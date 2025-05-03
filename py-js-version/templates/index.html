@@ -1,51 +1,125 @@
 <!DOCTYPE html>
+<!--
+    Workout Tracker App - Main Template (Python + JavaScript Version)
+    ----------------------------------------------------------------
+    This is the main HTML template for the Python+JavaScript version of the Workout Tracker app.
+    It provides the structure for the single-page application, with sections for:
+    - Authentication status
+    - Exercise selection and management
+    - Workout recording
+    - Workout history display
+
+    The content is dynamically updated by JavaScript without page reloads,
+    while data persistence is handled by the Python backend.
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker - Python + JavaScript</title>
+    <!-- Main stylesheet - loaded using Flask's url_for helper -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Inline styles for authentication UI components -->
+    <style>
+        /* Authentication status container - positioned at the top right */
+        .auth-status {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        /* Styles for the logged-in state UI */
+        .auth-status .logged-in {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Styles for the logged-out state UI */
+        .auth-status .logged-out {
+            display: flex;
+            gap: 10px;
+        }
+        /* Username display styling */
+        #username {
+            font-weight: bold;
+        }
+        /* Logout button styling */
+        #logout-btn {
+            cursor: pointer;
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        /* Logout button hover effect */
+        #logout-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
+        <!-- Header section with title and authentication status -->
         <header>
             <h1>Workout Tracker</h1>
             <p class="subtitle">Python + JavaScript Integration Example</p>
+            <!-- Authentication status section - updated by JavaScript based on session state -->
+            <div id="auth-status" class="auth-status">
+                <!-- These sections start hidden and are shown/hidden by JavaScript -->
+                <!-- Logged-out state UI with links to login and register pages -->
+                <div class="logged-out" style="display: none;">
+                    <a href="/login" class="btn btn-secondary">Login</a>
+                    <a href="/register" class="btn btn-secondary">Register</a>
+                </div>
+                <!-- Logged-in state UI with welcome message and logout button -->
+                <div class="logged-in" style="display: none;">
+                    <span>Welcome, <span id="username"></span>!</span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
         </header>
 
-        <!-- Flash messages container -->
+        <!-- Flash messages container - used for displaying notifications -->
         <div id="flash-messages" class="flash-messages"></div>
 
+        <!-- Main content area with three main sections -->
         <main>
+            <!-- Exercise Section: For browsing and selecting exercises -->
             <section class="exercise-section">
                 <div class="section-header">
                     <h2>Select Exercise</h2>
+                    <!-- This button is only shown to authenticated users (controlled by JavaScript) -->
                     <button id="show-add-exercise-form" class="btn btn-secondary">Add New Exercise</button>
                 </div>
 
-                <!-- Add Exercise Form -->
+                <!-- Add Exercise Form - Initially hidden, shown when "Add New Exercise" is clicked -->
                 <div id="add-exercise-form-container" style="display: none;">
                     <h3>Create New Exercise</h3>
                     <form id="add-exercise-form">
+                        <!-- Exercise name input -->
                         <div class="form-group">
                             <label for="exercise-name">Exercise Name:</label>
                             <input type="text" id="exercise-name" name="name" required>
                         </div>
 
+                        <!-- Muscle group input -->
                         <div class="form-group">
                             <label for="muscle-group">Muscle Group:</label>
                             <input type="text" id="muscle-group" name="muscle_group" required>
                         </div>
 
+                        <!-- Exercise description input -->
                         <div class="form-group">
                             <label for="description">Description:</label>
                             <textarea id="description" name="description" rows="3" required></textarea>
                         </div>
 
+                        <!-- Information about automatic SVG creation -->
                         <div class="form-group">
                             <p class="info-text">A new SVG image will be automatically created for this exercise.</p>
                         </div>
 
+                        <!-- Form action buttons -->
                         <div class="form-actions">
                             <button type="submit" class="btn">Save Exercise</button>
                             <button type="button" id="cancel-add-exercise" class="btn btn-secondary">Cancel</button>
@@ -53,69 +127,95 @@
                     </form>
                 </div>
 
-                <!-- Exercise List - Will be populated by JavaScript -->
+                <!-- Exercise List Container - Populated dynamically by JavaScript -->
+                <!-- JavaScript fetches exercises from the Python API and renders them here -->
                 <div id="exercise-list" class="exercise-list"></div>
             </section>
 
+            <!-- Workout Form Section: For recording new workouts -->
             <section class="workout-form-section">
                 <h2>Record Workout</h2>
                 <form id="workout-form">
+                    <!-- Selected exercise display -->
                     <div class="form-group">
                         <label>Selected Exercise:</label>
                         <span id="selected-exercise-name">None</span>
+                        <!-- Clear selection link - initially hidden -->
                         <a href="#" id="clear-selection" style="display: none;">(Clear)</a>
+                        <!-- Hidden input to store the selected exercise ID -->
                         <input type="hidden" id="selected-exercise-id">
                     </div>
 
+                    <!-- Weight input -->
                     <div class="form-group">
                         <label for="weight">Weight (lbs):</label>
                         <input type="number" id="weight" name="weight" step="0.5" min="0" required>
                     </div>
 
+                    <!-- Repetitions input -->
                     <div class="form-group">
                         <label for="reps">Reps:</label>
                         <input type="number" id="reps" name="reps" min="1" required>
                     </div>
 
+                    <!-- Submit button -->
                     <button type="submit" class="btn">Save Workout</button>
                 </form>
             </section>
 
+            <!-- Workout History Section: For displaying past workouts -->
             <section class="workout-history-section">
                 <h2>Workout History</h2>
-                <!-- Workout History - Will be populated by JavaScript -->
+                <!-- Workout History Container - Populated dynamically by JavaScript -->
+                <!-- JavaScript fetches workout history from the Python API and renders it here -->
+                <!-- For authenticated users, this shows only their own workouts -->
                 <div id="workout-history" class="workout-history"></div>
             </section>
         </main>
 
+        <!-- Footer section with copyright information -->
         <footer>
             <p>&copy; 2024 Workout Tracker App - Python + JavaScript Integration Example</p>
         </footer>
     </div>
 
-    <!-- Templates for JavaScript rendering -->
+    <!-- HTML Templates for JavaScript Dynamic Content Rendering -->
+    <!-- These templates are not displayed directly but are cloned by JavaScript -->
+    <!-- to create dynamic content with consistent structure and styling -->
+
+    <!-- Exercise Item Template -->
+    <!-- Used by JavaScript to create exercise cards in the exercise list -->
     <template id="exercise-template">
         <div class="exercise-item">
+            <!-- Exercise actions (delete button) -->
             <div class="exercise-actions">
                 <button class="btn-delete" title="Delete Exercise">×</button>
             </div>
+            <!-- Exercise content (image and information) -->
             <div class="exercise-content">
+                <!-- Exercise image container -->
                 <div class="exercise-image">
-                    <img src="" alt="">
+                    <img src="" alt=""> <!-- Image source and alt text set by JavaScript -->
                 </div>
+                <!-- Exercise information -->
                 <div class="exercise-info">
-                    <h3 class="exercise-name"></h3>
-                    <p class="exercise-muscle-group"></p>
-                    <p class="exercise-description"></p>
+                    <h3 class="exercise-name"></h3> <!-- Exercise name inserted by JavaScript -->
+                    <p class="exercise-muscle-group"></p> <!-- Muscle group inserted by JavaScript -->
+                    <p class="exercise-description"></p> <!-- Description inserted by JavaScript -->
                 </div>
             </div>
         </div>
     </template>
 
+    <!-- Workout History Item Template -->
+    <!-- Used by JavaScript to create workout history entries -->
     <template id="workout-history-template">
         <div class="workout-item">
+            <!-- Workout date - filled by JavaScript -->
             <div class="workout-date"></div>
+            <!-- Exercise name - filled by JavaScript -->
             <div class="workout-exercise"></div>
+            <!-- Workout details (weight and reps) -->
             <div class="workout-details">
                 <span class="workout-weight"></span> lbs x 
                 <span class="workout-reps"></span> reps
@@ -123,7 +223,8 @@
         </div>
     </template>
 
-    <!-- Load JavaScript -->
+    <!-- Load JavaScript - using Flask's url_for helper to generate the correct URL -->
+    <!-- This script handles all the dynamic behavior of the application -->
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

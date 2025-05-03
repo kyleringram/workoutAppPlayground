@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!--
+    Workout Tracker App - Login Page (Python + JavaScript Version)
+    ------------------------------------------------------------
+    This template provides the login form for the Workout Tracker app.
+    It allows users to authenticate with their username and password.
+
+    The form is submitted via JavaScript to the Python backend API,
+    which validates the credentials and creates a server-side session.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Workout Tracker</title>
+    <!-- Main stylesheet - loaded using Flask's url_for helper -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Inline styles specific to authentication pages -->
+    <style>
+        /* Container for the authentication form */
+        .auth-container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        /* Header styling for the auth form */
+        .auth-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Form group styling (label + input) */
+        .auth-form .form-group {
+            margin-bottom: 15px;
+        }
+        /* Label styling */
+        .auth-form label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        /* Input field styling */
+        .auth-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        /* Submit button styling */
+        .auth-form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        /* Button hover effect */
+        .auth-form button:hover {
+            background-color: #45a049;
+        }
+        /* Links section styling */
+        .auth-links {
+            text-align: center;
+            margin-top: 15px;
+        }
+        /* Flash messages container styling */
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication form container -->
+    <div class="auth-container">
+        <!-- Header with title and welcome message -->
+        <div class="auth-header">
+            <h1>Login</h1>
+            <p>Welcome back to Workout Tracker</p>
+        </div>
+
+        <!-- Flash messages container - for displaying errors and notifications -->
+        <div id="flash-messages" class="flash-messages"></div>
+
+        <!-- Login form - submitted via JavaScript to the API endpoint -->
+        <form id="login-form" class="auth-form">
+            <!-- Username input field -->
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <!-- Password input field -->
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit">Login</button>
+        </form>
+
+        <!-- Link to registration page for new users -->
+        <div class="auth-links">
+            <p>Don't have an account? <a href="/register">Register</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const flashMessages = document.getElementById('flash-messages');
+
+            // Check if user is already logged in
+            fetch('/api/auth/user')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        window.location.href = '/';
+                    }
+                });
+
+            // Handle login form submission
+            loginForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // Validate form
+                if (!username || !password) {
+                    showFlashMessage('All fields are required.');
+                    return;
+                }
+
+                // Create login data
+                const loginData = {
+                    username: username,
+                    password: password
+                };
+
+                // Send login request
+                fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showFlashMessage(data.error);
+                    } else {
+                        // Redirect to home page
+                        window.location.href = '/';
+                    }
+                })
+                .catch(error => {
+                    showFlashMessage('An error occurred. Please try again.');
+                    console.error('Error:', error);
+                });
+            });
+
+            // Show flash message
+            function showFlashMessage(message) {
+                const flashMessage = document.createElement('div');
+                flashMessage.className = 'flash-message';
+                flashMessage.textContent = message;
+
+                flashMessages.innerHTML = '';
+                flashMessages.appendChild(flashMessage);
+
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    flashMessage.style.opacity = '0';
+                    setTimeout(() => {
+                        if (flashMessages.contains(flashMessage)) {
+                            flashMessages.removeChild(flashMessage);
+                        }
+                    }, 500);
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

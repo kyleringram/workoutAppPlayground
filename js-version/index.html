@@ -5,13 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Workout Tracker (JavaScript Version)</title>
     <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        .auth-status {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .auth-status .logged-in {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .auth-status .logged-out {
+            display: flex;
+            gap: 10px;
+        }
+        #username {
+            font-weight: bold;
+        }
+        #logout-btn {
+            cursor: pointer;
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        #logout-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+            position: relative;
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover {
+            color: #f44336;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Workout Tracker</h1>
             <p class="version-tag">JavaScript Version</p>
+            <div id="auth-status" class="auth-status">
+                <!-- Authentication status will be inserted here by JavaScript -->
+                <div class="logged-out">
+                    <button id="login-btn" class="btn btn-secondary">Login</button>
+                    <button id="register-btn" class="btn btn-secondary">Register</button>
+                </div>
+                <div class="logged-in" style="display: none;">
+                    <span>Welcome, <span id="username"></span>!</span>
+                    <button id="logout-btn" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
         </header>
+
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Login</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username:</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password:</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Register Modal -->
+        <div id="register-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2>Register</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-username">Username:</label>
+                        <input type="text" id="register-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email:</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password:</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm-password">Confirm Password:</label>
+                        <input type="password" id="register-confirm-password" required>
+                    </div>
+                    <button type="submit" class="btn">Register</button>
+                </form>
+            </div>
+        </div>
 
         <div class="flash-messages" id="flash-messages">
             <!-- Flash messages will be inserted here by JavaScript -->

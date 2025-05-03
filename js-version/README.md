@@ -63,7 +63,7 @@ The JavaScript version of the app has the following characteristics:
 #### Disadvantages
 - **Local storage only**: Data is stored in the browser's localStorage, which is limited to the device
 - **Storage limitations**: localStorage has size limitations (typically 5-10MB)
-- **No user authentication**: Cannot easily support multiple users
+- **Simple authentication**: User data is stored in localStorage without proper encryption
 - **Limited data processing**: Complex queries and data analysis are more difficult
 
 #### When to use
@@ -73,11 +73,36 @@ The JavaScript version of the app has the following characteristics:
 - When you want to run the app locally without installation
 - When you're prototyping or learning web development
 
+## Authentication System
+
+This version includes a simple client-side authentication system:
+
+1. **User Registration**: New users can create accounts with username, email, and password
+2. **User Login**: Existing users can log in with their credentials
+3. **User-specific Data**: Each user can only see and manage their own workout data
+
+### How Authentication Works
+
+The authentication system in this version is entirely client-side:
+
+1. User credentials are stored in the browser's localStorage
+2. Passwords are stored in plain text (not secure for production use)
+3. User sessions persist until the user logs out or clears browser data
+4. Each workout is associated with a specific user ID
+5. The UI displays only workouts belonging to the currently logged-in user
+
+### Default User
+
+A default user is created for demonstration purposes:
+- Username: `demo`
+- Password: `password`
+
 ## Getting Started
 
 1. Download or clone the repository
 2. Open `js-version/index.html` in your web browser
-3. Start tracking your workouts!
+3. Log in with the default user or create your own account
+4. Start tracking your workouts!
 
 ## Browser Compatibility
 
