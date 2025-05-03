@@ -2,12 +2,14 @@
 
 A web application for tracking workouts. Users can select exercises from a database, record the weight and reps for each exercise, and view their workout history.
 
-This repository contains two versions of the app:
+This repository contains three versions of the app:
 1. **Python/Flask Version** (in the root directory) - A server-based application using Python, Flask, and SQLite
 2. **JavaScript Version** (in the `js-version` directory) - A client-side application using HTML, CSS, and JavaScript with localStorage
+3. **Python+JavaScript Hybrid Version** (in the `py-js-version` directory) - A combination approach using a Python/Flask API backend with a JavaScript frontend
 
 ## Features
 
+- User authentication and multiple user support
 - Database of exercises with descriptions and muscle group information
 - Exercise thumbnails showing targeted muscle groups
 - Record workouts with weight and reps
@@ -169,11 +171,44 @@ Alternatively, you can use a simple HTTP server:
    http://localhost:8000/
    ```
 
+### Python+JavaScript Hybrid Version
+
+Running the hybrid version:
+
+1. Navigate to the py-js-version directory:
+   ```
+   cd py-js-version
+   ```
+
+2. Initialize the database:
+   ```
+   flask --app api init-db
+   ```
+
+3. Start the Flask API server:
+   ```
+   python api.py
+   ```
+
+4. Open a web browser and navigate to:
+   ```
+   http://127.0.0.1:5000/
+   ```
+
+This version combines a Python/Flask backend API with a JavaScript frontend. The JavaScript code makes API calls to the Python backend for data persistence.
+
 ## Usage
 
-1. **Select an Exercise**: Browse the exercise list and click on an exercise to select it.
-2. **Record a Workout**: Enter the weight and reps for the selected exercise and click "Save Workout".
-3. **View Workout History**: Scroll down to see your workout history, sorted by date.
+1. **Register an Account**: If you're a new user, click on the "Register" link and create an account with a username, email, and password.
+2. **Login**: Use your username and password to log in to the application.
+3. **Select an Exercise**: Browse the exercise list and click on an exercise to select it.
+4. **Record a Workout**: Enter the weight and reps for the selected exercise and click "Save Workout".
+5. **View Workout History**: Scroll down to see your workout history, sorted by date.
+6. **Logout**: Click the "Logout" button in the top-right corner when you're done.
+
+Note: A default admin user is created during database initialization with the following credentials:
+- Username: admin
+- Password: admin123
 
 ## Testing
 
@@ -206,7 +241,9 @@ WorkoutApp/
 │   └── images/             # Exercise images
 │       └── README.md       # Image requirements
 └── templates/              # HTML templates
-    └── index.html          # Main page template
+    ├── index.html          # Main page template
+    ├── login.html          # Login page template
+    └── register.html       # Registration page template
 ```
 
 ### JavaScript Version (js-version Directory)
@@ -222,13 +259,27 @@ WorkoutApp/js-version/
     └── images/             # Exercise images (same as Python version)
 ```
 
+### Python+JavaScript Hybrid Version (py-js-version Directory)
+```
+WorkoutApp/py-js-version/
+├── api.py                  # Python/Flask API backend
+├── README.md               # Hybrid version documentation
+├── templates/              # HTML templates
+│   └── index.html          # Main page template with JavaScript integration
+└── static/                 # Static files
+    ├── css/                # CSS stylesheets
+    │   └── style.css       # Main stylesheet
+    └── js/                 # JavaScript files
+        └── script.js       # JavaScript for frontend and API communication
+```
+
 ## Choosing Between Versions
 
 ### Python/Flask Version (Server-based)
 
 **Advantages:**
 - Data is stored in a SQLite database, allowing for persistent storage across devices
-- Can be extended to support multiple users with authentication
+- Supports multiple users with authentication
 - Sensitive data can be protected on the server
 - SQL can be used for complex data analysis and reporting
 - Can be integrated with other systems and APIs
@@ -256,9 +307,27 @@ WorkoutApp/js-version/
 
 For more details on the JavaScript version, see the [JavaScript Version README](js-version/README.md).
 
+### Python+JavaScript Hybrid Version (API-based)
+
+**Advantages:**
+- Combines the best of both approaches
+- Server-side data persistence with a dynamic frontend
+- No page reloads for a smoother user experience
+- Clear separation between frontend and backend
+- Scalable architecture for larger applications
+- RESTful API can be used by other clients (mobile apps, etc.)
+
+**When to use:**
+- When you need both server-side persistence and a dynamic UI
+- When building a single-page application (SPA)
+- When you want to separate frontend and backend concerns
+- When you might need to support multiple client applications
+- When you're building a more complex application that needs to scale
+
+For more details on the hybrid version, see the [Python+JavaScript Hybrid Version README](py-js-version/README.md).
+
 ## Future Enhancements
 
-- User authentication and multiple user support
 - Workout plans and routines
 - Progress tracking with charts and statistics
 - Exercise search and filtering

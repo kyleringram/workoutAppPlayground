@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///workout.db'
@@ -12,6 +13,27 @@ db = SQLAlchemy(app)
 app.app_context().push()
 
 # Database Models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    # Relationship with workout logs
+    workout_logs = db.relationship('WorkoutLog', backref='user', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email
+        }
 class Exercise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -31,28 +53,117 @@ class Exercise(db.Model):
 class WorkoutLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercise.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     weight = db.Column(db.Float, nullable=False)
     reps = db.Column(db.Integer, nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
 
     exercise = db.relationship('Exercise', backref=db.backref('logs', lazy=True))
+    # User relationship is defined in the User model
 
     def to_dict(self):
         return {
             'id': self.id,
             'exercise_id': self.exercise_id,
             'exercise_name': self.exercise.name,
+            'user_id': self.user_id,
             'weight': self.weight,
             'reps': self.reps,
             'date': self.date.strftime('%Y-%m-%d %H:%M:%S')
         }
 
+# Authentication routes
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+
+        # Validate input
+        if not username or not email or not password or not confirm_password:
+            flash('All fields are required')
+            return render_template('register.html')
+
+        if password != confirm_password:
+            flash('Passwords do not match')
+            return render_template('register.html')
+
+        # Check if username or email already exists
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists')
+            return render_template('register.html')
+
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists')
+            return render_template('register.html')
+
+        # Create new user
+        user = User(username=username, email=email)
+        user.set_password(password)
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash('Registration successful! Please log in.')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if 'user_id' in session:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if not username or not password:
+            flash('Username and password are required')
+            return render_template('login.html')
+
+        user = User.query.filter_by(username=username).first()
+
+        if not user or not user.check_password(password):
+            flash('Invalid username or password')
+            return render_template('login.html')
+
+        # Login successful
+        session['user_id'] = user.id
+        session['username'] = user.username
+        flash(f'Welcome back, {user.username}!')
+        return redirect(url_for('index'))
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('username', None)
+    session.pop('selected_exercise_id', None)
+    session.pop('show_exercise_form', None)
+    flash('You have been logged out')
+    return redirect(url_for('login'))
+
 # Routes
 @app.route('/')
 def index():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
     exercises = Exercise.query.all()
-    workouts = WorkoutLog.query.order_by(WorkoutLog.date.desc()).all()
+    workouts = WorkoutLog.query.filter_by(user_id=user_id).order_by(WorkoutLog.date.desc()).all()
     selected_exercise = None
+
+    # Check if the exercise form should be displayed
+    show_exercise_form = session.get('show_exercise_form', False)
 
     if 'selected_exercise_id' in session and session['selected_exercise_id']:
         selected_exercise = Exercise.query.get(session['selected_exercise_id'])
@@ -60,16 +171,25 @@ def index():
     return render_template('index.html', 
                           exercises=exercises, 
                           workouts=workouts, 
-                          selected_exercise=selected_exercise)
+                          selected_exercise=selected_exercise,
+                          show_exercise_form=show_exercise_form)
 
 @app.route('/select_exercise/<int:exercise_id>')
 def select_exercise(exercise_id):
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     exercise = Exercise.query.get_or_404(exercise_id)
     session['selected_exercise_id'] = exercise.id
     return redirect(url_for('index'))
 
 @app.route('/add_workout', methods=['POST'])
 def add_workout():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     if 'selected_exercise_id' not in session or not session['selected_exercise_id']:
         flash('Please select an exercise first.')
         return redirect(url_for('index'))
@@ -77,6 +197,7 @@ def add_workout():
     try:
         workout = WorkoutLog(
             exercise_id=session['selected_exercise_id'],
+            user_id=session['user_id'],
             weight=float(request.form['weight']),
             reps=int(request.form['reps'])
         )
@@ -95,12 +216,40 @@ def add_workout():
 # Clear selected exercise
 @app.route('/clear_selection')
 def clear_selection():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     session.pop('selected_exercise_id', None)
+    return redirect(url_for('index'))
+
+# Show exercise form
+@app.route('/show_exercise_form')
+def show_exercise_form():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    session['show_exercise_form'] = True
+    return redirect(url_for('index'))
+
+# Hide exercise form
+@app.route('/hide_exercise_form')
+def hide_exercise_form():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    session['show_exercise_form'] = False
     return redirect(url_for('index'))
 
 # Delete exercise
 @app.route('/delete_exercise/<int:exercise_id>', methods=['POST'])
 def delete_exercise(exercise_id):
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     try:
         exercise = Exercise.query.get_or_404(exercise_id)
 
@@ -129,6 +278,10 @@ def delete_exercise(exercise_id):
 # Add new exercise
 @app.route('/add_exercise', methods=['POST'])
 def add_exercise():
+    # Check if user is logged in
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     try:
         # Get form data
         name = request.form['name']
@@ -189,6 +342,9 @@ def add_exercise():
         db.session.add(exercise)
         db.session.commit()
 
+        # Hide the form after successful submission
+        session['show_exercise_form'] = False
+
         flash(f'Exercise "{name}" added successfully!')
     except Exception as e:
         flash(f'Error adding exercise: {str(e)}')
@@ -215,6 +371,14 @@ def init_db():
 
         db.session.commit()
         print('Database initialized with sample exercises.')
+
+    # Add a default admin user if no users exist
+    if User.query.count() == 0:
+        admin_user = User(username='admin', email='admin@example.com')
+        admin_user.set_password('admin123')
+        db.session.add(admin_user)
+        db.session.commit()
+        print('Default admin user created. Username: admin, Password: admin123')
 
 if __name__ == '__main__':
     app.run(debug=True)

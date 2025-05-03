@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker - Python + JavaScript</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Workout Tracker</h1>
+            <p class="subtitle">Python + JavaScript Integration Example</p>
+        </header>
+
+        <!-- Flash messages container -->
+        <div id="flash-messages" class="flash-messages"></div>
+
+        <main>
+            <section class="exercise-section">
+                <div class="section-header">
+                    <h2>Select Exercise</h2>
+                    <button id="show-add-exercise-form" class="btn btn-secondary">Add New Exercise</button>
+                </div>
+
+                <!-- Add Exercise Form -->
+                <div id="add-exercise-form-container" style="display: none;">
+                    <h3>Create New Exercise</h3>
+                    <form id="add-exercise-form">
+                        <div class="form-group">
+                            <label for="exercise-name">Exercise Name:</label>
+                            <input type="text" id="exercise-name" name="name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="muscle-group">Muscle Group:</label>
+                            <input type="text" id="muscle-group" name="muscle_group" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <textarea id="description" name="description" rows="3" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <p class="info-text">A new SVG image will be automatically created for this exercise.</p>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn">Save Exercise</button>
+                            <button type="button" id="cancel-add-exercise" class="btn btn-secondary">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Exercise List - Will be populated by JavaScript -->
+                <div id="exercise-list" class="exercise-list"></div>
+            </section>
+
+            <section class="workout-form-section">
+                <h2>Record Workout</h2>
+                <form id="workout-form">
+                    <div class="form-group">
+                        <label>Selected Exercise:</label>
+                        <span id="selected-exercise-name">None</span>
+                        <a href="#" id="clear-selection" style="display: none;">(Clear)</a>
+                        <input type="hidden" id="selected-exercise-id">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">Weight (lbs):</label>
+                        <input type="number" id="weight" name="weight" step="0.5" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reps">Reps:</label>
+                        <input type="number" id="reps" name="reps" min="1" required>
+                    </div>
+
+                    <button type="submit" class="btn">Save Workout</button>
+                </form>
+            </section>
+
+            <section class="workout-history-section">
+                <h2>Workout History</h2>
+                <!-- Workout History - Will be populated by JavaScript -->
+                <div id="workout-history" class="workout-history"></div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Workout Tracker App - Python + JavaScript Integration Example</p>
+        </footer>
+    </div>
+
+    <!-- Templates for JavaScript rendering -->
+    <template id="exercise-template">
+        <div class="exercise-item">
+            <div class="exercise-actions">
+                <button class="btn-delete" title="Delete Exercise">×</button>
+            </div>
+            <div class="exercise-content">
+                <div class="exercise-image">
+                    <img src="" alt="">
+                </div>
+                <div class="exercise-info">
+                    <h3 class="exercise-name"></h3>
+                    <p class="exercise-muscle-group"></p>
+                    <p class="exercise-description"></p>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="workout-history-template">
+        <div class="workout-item">
+            <div class="workout-date"></div>
+            <div class="workout-exercise"></div>
+            <div class="workout-details">
+                <span class="workout-weight"></span> lbs x 
+                <span class="workout-reps"></span> reps
+            </div>
+        </div>
+    </template>
+
+    <!-- Load JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

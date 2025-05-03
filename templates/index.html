@@ -10,6 +10,10 @@
     <div class="container">
         <header>
             <h1>Workout Tracker</h1>
+            <div class="user-info">
+                <span>Welcome, {{ session.username }}!</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-small">Logout</a>
+            </div>
         </header>
 
         {% with messages = get_flashed_messages() %}
@@ -26,10 +30,12 @@
             <section class="exercise-section">
                 <div class="section-header">
                     <h2>Select Exercise</h2>
-                    <button id="show-add-exercise-form" class="btn btn-secondary">Add New Exercise</button>
+                    {% if not show_exercise_form %}
+                    <a href="{{ url_for('show_exercise_form') }}" class="btn btn-secondary">Add New Exercise</a>
+                    {% endif %}
                 </div>
 
-                <div id="add-exercise-form-container" style="display: none;">
+                <div id="add-exercise-form-container" {% if not show_exercise_form %}style="display: none;"{% endif %}>
                     <h3>Create New Exercise</h3>
                     <form id="add-exercise-form" action="{{ url_for('add_exercise') }}" method="post">
                         <div class="form-group">
@@ -53,7 +59,7 @@
 
                         <div class="form-actions">
                             <button type="submit" class="btn">Save Exercise</button>
-                            <button type="button" id="cancel-add-exercise" class="btn btn-secondary">Cancel</button>
+                            <a href="{{ url_for('hide_exercise_form') }}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>
@@ -137,6 +143,5 @@
             <p>&copy; 2024 Workout Tracker App</p>
         </footer>
     </div>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
